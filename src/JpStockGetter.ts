@@ -1,6 +1,6 @@
 type Variables = {[key: string]: string | any | undefined}
 
-const kUpdateDateDisplayRow: number = 8;
+const kUpdateDateDisplayRow: number = 7;
 const kUpdateDateDisplayColumn: number = 2;
 const kUrl: string = 'https://kabudata-dll.com/wp-content/uploads/';
 
@@ -58,18 +58,24 @@ export class JpStockGetter {
     public GetJpStock(): void 
     {
         let csv = this.GetCsvFile();
+        if(csv.length == 0)
+        {
+            Browser.msgBox("情報の更新に失敗しました。");
+            return;
+        }
         let json_data = this.ConvertCsvToJson(csv);
 
-        let sheet = SpreadsheetApp.getActiveSpreadsheet().getSheets()[1];
         const oValues: Array<any> = [];
         json_data.forEach((obj)=> {
             oValues.push([obj.code, obj.name, obj.closing_quotation, obj.dividend, obj.per, obj.pbr]);
         })
-        sheet.getRange(2, 1, json_data.length, 6).setValues(oValues);
+        let info_sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName('株価情報')!;
+        info_sheet.getRange(2, 1, json_data.length, 6).setValues(oValues);
     
         // 更新日を入力
-        let ssheet = SpreadsheetApp.getActiveSpreadsheet().getSheets()[0];
-        ssheet.getRange(kUpdateDateDisplayRow, kUpdateDateDisplayColumn).setValue(json_data[0].current_date + '更新');
+        let table_sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName('一覧')!;
+        table_sheet.getRange(kUpdateDateDisplayRow, kUpdateDateDisplayColumn).setValue(json_data[0].current_date + '更新');
+        Browser.msgBox("情報を更新しました。");
         return;
     }
 
